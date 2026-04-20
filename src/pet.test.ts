@@ -56,6 +56,7 @@ describe("pet loop logic", () => {
       energy: 53,
     });
     expect(ACTION_EFFECTS.feed.hunger).toBeGreaterThan(0);
+    expect(applyPetAction(pet, "feed").actionCounts.feed).toBe(1);
   });
 
   it("turns the pet sick when neglect drops vitals too low", () => {
