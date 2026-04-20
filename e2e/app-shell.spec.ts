@@ -1,14 +1,16 @@
 import { expect, test } from "@playwright/test";
 
-test("loads the phase 1 app shell", async ({ page }) => {
+test("loads the playable pet loop", async ({ page }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
   await expect(
     page.getByRole("heading", {
-      name: /virtual pet app shell is online/i,
+      name: /nova/i,
     }),
   ).toBeVisible();
 
-  await expect(page.getByText("React + TypeScript")).toBeVisible();
-  await expect(page.getByText("Tailwind CSS")).toBeVisible();
+  await expect(page.getByText("Normal")).toBeVisible();
+  await expect(page.getByRole("button", { name: /feed/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /play/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /rest/i })).toBeVisible();
 });
