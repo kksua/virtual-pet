@@ -6,6 +6,7 @@ export const RECOVERY_STREAK_TARGET = 2;
 
 export type PetStatus = "normal" | "sick" | "evolved";
 export type PetAction = "feed" | "play" | "rest";
+export type PetActionCounts = Record<PetAction, number>;
 
 export type PetVitals = {
   hunger: number;
@@ -19,6 +20,8 @@ export type Pet = {
   status: PetStatus;
   recoveryStreak: number;
   thrivingStreak: number;
+  actionCounts: PetActionCounts;
+  tickCount: number;
 };
 
 export const TICK_DECAY: PetVitals = {
@@ -83,6 +86,12 @@ export function createPet(name = "Nova"): Pet {
     status: "normal",
     recoveryStreak: 0,
     thrivingStreak: 0,
+    actionCounts: {
+      feed: 0,
+      play: 0,
+      rest: 0,
+    },
+    tickCount: 0,
   };
 }
 
@@ -100,11 +109,24 @@ export function renamePet(pet: Pet, nextName: string): Pet {
 }
 
 export function tickPet(pet: Pet): Pet {
-  return updatePet(pet, TICK_DECAY);
+  const updatedPet = updatePet(pet, TICK_DECAY);
+
+  return {
+    ...updatedPet,
+    tickCount: updatedPet.tickCount + 1,
+  };
 }
 
 export function applyPetAction(pet: Pet, action: PetAction): Pet {
-  return updatePet(pet, ACTION_EFFECTS[action]);
+  const updatedPet = updatePet(pet, ACTION_EFFECTS[action]);
+
+  return {
+    ...updatedPet,
+    actionCounts: {
+      ...updatedPet.actionCounts,
+      [action]: updatedPet.actionCounts[action] + 1,
+    },
+  };
 }
 
 export function clampVital(value: number): number {
@@ -113,6 +135,46 @@ export function clampVital(value: number): number {
 
 export function getVitalsEntries(vitals: PetVitals) {
   return Object.entries(vitals) as Array<[keyof PetVitals, number]>;
+}
+
+export function isValidPetActionCounts(
+  value: unknown,
+): value is PetActionCounts {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    typeof candidate.feed === "number" &&
+    Number.isFinite(candidate.feed) &&
+    typeof candidate.play === "number" &&
+    Number.isFinite(candidate.play) &&
+    typeof candidate.rest === "number" &&
+    Number.isFinite(candidate.rest)
+  );
+}
+
+export function isValidPetStatus(value: unknown): value is PetStatus {
+  return value === "normal" || value === "sick" || value === "evolved";
+}
+
+export function isValidPetVitals(value: unknown): value is PetVitals {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    typeof candidate.hunger === "number" &&
+    Number.isFinite(candidate.hunger) &&
+    typeof candidate.happiness === "number" &&
+    Number.isFinite(candidate.happiness) &&
+    typeof candidate.energy === "number" &&
+    Number.isFinite(candidate.energy)
+  );
 }
 
 function updatePet(pet: Pet, delta: PetVitals): Pet {
