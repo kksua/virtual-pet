@@ -1,12 +1,19 @@
 export const PET_VITAL_MIN = 0;
 export const PET_VITAL_MAX = 100;
-export const TICK_INTERVAL_MS = 15000;
+export const TICK_INTERVAL_MS = 18000;
 export const EVOLUTION_STREAK_TARGET = 3;
 export const RECOVERY_STREAK_TARGET = 2;
+export const SICK_CRITICAL_THRESHOLD = 15;
+export const SICK_MULTI_LOW_THRESHOLD = 30;
+export const RECOVERY_THRESHOLD = 48;
+export const THRIVING_THRESHOLD = 82;
+export const VITAL_WARNING_THRESHOLD = 35;
+export const VITAL_HEALTHY_THRESHOLD = 65;
 
 export type PetStatus = "normal" | "sick" | "evolved";
 export type PetAction = "feed" | "play" | "rest";
 export type PetActionCounts = Record<PetAction, number>;
+export type VitalMood = "critical" | "warning" | "steady" | "thriving";
 
 export type PetVitals = {
   hunger: number;
@@ -25,26 +32,26 @@ export type Pet = {
 };
 
 export const TICK_DECAY: PetVitals = {
-  hunger: -5,
-  happiness: -4,
+  hunger: -4,
+  happiness: -3,
   energy: -3,
 };
 
 export const ACTION_EFFECTS: Record<PetAction, PetVitals> = {
   feed: {
-    hunger: 18,
-    happiness: 4,
-    energy: -2,
+    hunger: 16,
+    happiness: 3,
+    energy: -1,
   },
   play: {
-    hunger: -4,
-    happiness: 16,
-    energy: -7,
+    hunger: -5,
+    happiness: 14,
+    energy: -8,
   },
   rest: {
-    hunger: -3,
-    happiness: 3,
-    energy: 20,
+    hunger: -2,
+    happiness: 4,
+    energy: 18,
   },
 };
 
@@ -65,7 +72,7 @@ export const STATUS_COPY: Record<
     badge: "Sick",
     summary: "Your pet needs careful support.",
     detail:
-      "Raise every vital above 45 for two checks in a row to recover fully.",
+      "Raise every vital above 48 for two checks in a row to recover fully.",
   },
   evolved: {
     badge: "Evolved",
@@ -135,6 +142,26 @@ export function clampVital(value: number): number {
 
 export function getVitalsEntries(vitals: PetVitals) {
   return Object.entries(vitals) as Array<[keyof PetVitals, number]>;
+}
+
+export function getVitalMood(value: number): VitalMood {
+  if (value <= SICK_CRITICAL_THRESHOLD) {
+    return "critical";
+  }
+
+  if (value < VITAL_WARNING_THRESHOLD) {
+    return "warning";
+  }
+
+  if (value >= THRIVING_THRESHOLD) {
+    return "thriving";
+  }
+
+  if (value >= VITAL_HEALTHY_THRESHOLD) {
+    return "steady";
+  }
+
+  return "warning";
 }
 
 export function isValidPetActionCounts(
@@ -252,16 +279,19 @@ function resolvePetState(
 
 function isSickCondition(vitals: PetVitals): boolean {
   const vitalValues = Object.values(vitals);
-  const criticallyLowVital = vitalValues.some((value) => value <= 15);
-  const lowVitals = vitalValues.filter((value) => value < 30).length >= 2;
+  const criticallyLowVital = vitalValues.some(
+    (value) => value <= SICK_CRITICAL_THRESHOLD,
+  );
+  const lowVitals =
+    vitalValues.filter((value) => value < SICK_MULTI_LOW_THRESHOLD).length >= 2;
 
   return criticallyLowVital || lowVitals;
 }
 
 function isRecoveryReady(vitals: PetVitals): boolean {
-  return Object.values(vitals).every((value) => value >= 45);
+  return Object.values(vitals).every((value) => value >= RECOVERY_THRESHOLD);
 }
 
 function isThriving(vitals: PetVitals): boolean {
-  return Object.values(vitals).every((value) => value >= 80);
+  return Object.values(vitals).every((value) => value >= THRIVING_THRESHOLD);
 }
