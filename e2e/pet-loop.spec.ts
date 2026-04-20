@@ -18,7 +18,7 @@ test("lets the player name the pet and use the core care actions", async ({
   await page.getByRole("button", { name: /feed/i }).click();
   await expect(page.getByText("90/100")).toBeVisible();
   await expect(
-    page.getByText(/watches for a second helping|first meal/i),
+    page.getByText(/snack secured|massive snack win|emotionally available|🍓/i),
   ).toBeVisible();
 
   await page.getByRole("button", { name: /rest/i }).click();
@@ -40,5 +40,7 @@ test("restores the saved pet after a reload", async ({ page }) => {
     }),
   ).toBeVisible();
   await expect(page.getByText("90/100")).toBeVisible();
-  await expect(page.getByText(/blinks awake exactly where you left things/i)).toBeVisible();
+  await expect(
+    page.getByText(/saved my whole vibe|elite save behavior|save loaded/i),
+  ).toBeVisible();
 });

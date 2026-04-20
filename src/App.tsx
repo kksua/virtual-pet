@@ -5,6 +5,7 @@ import {
   TICK_INTERVAL_MS,
   applyPetAction,
   createPet,
+  getVitalMood,
   getVitalsEntries,
   renamePet,
   tickPet,
@@ -58,16 +59,38 @@ const STATUS_STYLES: Record<PetStatus, string> = {
   evolved: "border-amber-300/50 bg-amber-400/10 text-amber-50",
 };
 
+const STATUS_SURFACES: Record<PetStatus, string> = {
+  normal:
+    "border-emerald-400/10 bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.12),_transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))]",
+  sick:
+    "border-rose-400/15 bg-[radial-gradient(circle_at_top_left,_rgba(244,63,94,0.16),_transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))]",
+  evolved:
+    "border-amber-300/20 bg-[radial-gradient(circle_at_top_left,_rgba(250,204,21,0.14),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(34,211,238,0.14),_transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02))]",
+};
+
+const STATUS_HINTS: Record<PetStatus, string> = {
+  normal: "Stable",
+  sick: "Needs care",
+  evolved: "Thriving",
+};
+
 const VITAL_STYLES = {
   hunger: "from-amber-300 via-orange-400 to-ember-500",
   happiness: "from-sky-300 via-cyan-400 to-teal-400",
   energy: "from-violet-300 via-fuchsia-400 to-pink-400",
 } as const;
 
+const VITAL_CARD_STYLES = {
+  critical: "border-rose-400/45 bg-rose-500/10 shadow-[0_10px_24px_rgba(244,63,94,0.12)]",
+  warning: "border-amber-300/30 bg-amber-400/6",
+  steady: "border-emerald-400/20 bg-emerald-500/6",
+  thriving: "border-sky-300/30 bg-sky-400/8 shadow-[0_10px_24px_rgba(56,189,248,0.12)]",
+} as const;
+
 const STATE_GUIDE: Record<PetStatus, string> = {
   normal:
-    "Keep every vital healthy, and stay above 80 long enough to unlock evolution.",
-  sick: "Raise every vital above 45 for two stable checks to recover.",
+    "Keep every vital healthy, and hold all three above 82 long enough to unlock evolution.",
+  sick: "Raise every vital above 48 for two stable checks to recover.",
   evolved:
     "Your pet has reached its evolved form. Keep caring for it so neglect does not undo the moment.",
 };
@@ -137,7 +160,7 @@ function App() {
       <div className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-6 py-8 lg:px-10 lg:py-10">
         <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-halo backdrop-blur">
-            <div className="bg-[radial-gradient(circle_at_top_left,_rgba(247,119,22,0.28),_transparent_38%),linear-gradient(135deg,_rgba(255,255,255,0.08),_rgba(255,255,255,0.02))] p-8 sm:p-10">
+            <div className={`p-8 sm:p-10 ${STATUS_SURFACES[pet.status]}`}>
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="font-display text-4xl leading-tight text-white sm:text-5xl">
                   {pet.name}
@@ -154,17 +177,20 @@ function App() {
               <p className="mt-3 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
                 {statusCopy.detail}
               </p>
+              <div className="mt-4 inline-flex rounded-full border border-white/10 bg-black/20 px-4 py-2 text-xs uppercase tracking-[0.28em] text-slate-300">
+                {STATUS_HINTS[pet.status]}
+              </div>
               <div className="mt-8 grid gap-4 sm:grid-cols-3">
                 {vitals.map(([vitalName, value]) => (
                   <article
                     key={vitalName}
-                    className="rounded-[1.5rem] border border-white/10 bg-slate-950/45 p-4"
+                    className={`rounded-[1.5rem] border p-4 ${VITAL_CARD_STYLES[getVitalMood(value)]}`}
                   >
                     <div className="flex items-center justify-between">
-                      <p className="font-display text-sm uppercase tracking-[0.28em] text-slate-400">
+                      <p className="font-display text-xs uppercase tracking-[0.24em] text-slate-400">
                         {vitalName}
                       </p>
-                      <p className="text-sm text-white">{value}/100</p>
+                      <p className="text-xs text-white">{value}/100</p>
                     </div>
                     <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/10">
                       <div
@@ -213,7 +239,7 @@ function App() {
 
           <section className="grid gap-6">
             <aside className="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/85 shadow-halo">
-              <div className="bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.16),_transparent_40%),linear-gradient(180deg,_rgba(255,255,255,0.05),_rgba(255,255,255,0.02))] p-7">
+              <div className={`p-7 ${STATUS_SURFACES[pet.status]}`}>
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="font-display text-sm uppercase tracking-[0.28em] text-slate-400">
@@ -232,7 +258,7 @@ function App() {
                 <button
                   type="button"
                   onClick={handlePetTap}
-                  className="mt-4 block w-full rounded-[1.75rem] border border-white/10 bg-slate-950/45 px-4 py-5 text-left transition hover:border-white/20 hover:bg-slate-950/55 active:scale-[0.99]"
+                  className={`mt-4 block w-full rounded-[1.75rem] border px-4 py-5 text-left transition hover:border-white/20 hover:bg-slate-950/55 active:scale-[0.99] ${pet.status === "sick" ? "border-rose-400/25 bg-rose-500/6" : pet.status === "evolved" ? "border-sky-300/25 bg-sky-400/6" : "border-emerald-400/20 bg-slate-950/45"}`}
                   aria-label={`Tap ${pet.name}`}
                 >
                   <PetCharacter
