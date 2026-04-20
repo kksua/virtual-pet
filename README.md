@@ -1,37 +1,53 @@
 # Virtual Pet
 
-`virtual-pet` is a single-page application where one user cares for one pet through a simple real-time life loop.
+> A small, expressive single-page virtual pet game built with React, TypeScript, and a real-time care loop.
 
-## Core Living System
+`virtual-pet` lets one player care for one animated pet through a lightweight system of ticking vitals, playful reactions, and state-based visual feedback.
 
-- `Living Vitals`: Hunger, Happiness, and Energy are tracked on a `0-100` scale and tick down over time to create ongoing care needs.
-- `Care Loop`: The player keeps the pet healthy with three actions: `Feed`, `Play`, and `Rest`.
-- `Dynamic States`: The pet shifts between `Normal`, `Sick`, and `Evolved` states based on how well it is cared for.
-- `Personal Touches`: Small Easter eggs and quirky reactions give the pet personality beyond raw numbers.
+## What Is Implemented
 
-## Scope
+- `Living vitals`: `Hunger`, `Happiness`, and `Energy` live on a `0-100` scale and tick down over time.
+- `Care loop`: `Feed`, `Play`, and `Rest` raise or lower the right vitals and keep the pet healthy.
+- `Dynamic states`: The pet moves between `Normal`, `Sick`, and `Evolved` based on current care.
+- `Personality`: The pet reacts with short chat-bubble lines, changing mood text, and a few Easter eggs tied to play patterns.
+- `Visual feedback`: A custom SVG pet shifts across three main visual stages, including a sick variant and an energized evolved form.
+- `Persistence`: The current pet name, vitals, progress, and state are saved in `localStorage`.
 
-- One user
-- One pet
-- One naming flow
-- One evolution path
-- One recovery path from sickness
-- Single-page application only
+## Stack
 
-## Constraints
+- React + TypeScript
+- Vite
+- Tailwind CSS
+- `localStorage` for saved pet state
+- Vitest for logic tests
+- Playwright for user-flow tests
 
-- No authentication
-- No multiple users
-- No multiple pets
-- No inventories
-- No currencies
-- No mini-games
-- No social features
-- No notifications
-- No admin features
-- No complex evolutions
-- No permanent death mechanics
+## Local Setup
+
+Run everything from the `virtual-pet` directory:
+
+```bash
+cd virtual-pet
+npm install
+npm run dev
+```
+
+### Useful Scripts
+
+- `npm run dev`
+- `npm run build`
+- `npm test`
+- `npm run test:e2e`
+
+## Project Scope
+
+| Scope | Constraints |
+| --- | --- |
+| **Pet:** Naming, 1 user, 1 evolution, 1 recovery path | Authentication and multiple users, multiple pets, inventories, or currencies |
+| **Stats (0-100):** Hunger, Happiness, Energy | Mini-games, social features, or notifications |
+| **Actions:** Feed, Play, Rest | Admin features or complex evolutions |
+| **States:** Normal, Sick, Evolved | Permanent death mechanics |
 
 ## Goal
 
-Build a small but expressive virtual pet experience where the player can quickly understand the pet's needs, respond with simple actions, and see clear visual feedback from the pet's changing condition.
+Ship a polished MVP where the player can understand the pet’s needs quickly, respond with simple care actions, and enjoy strong visual and personality feedback without bloating the product scope.

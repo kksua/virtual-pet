@@ -21,6 +21,8 @@ export type PetVitals = {
   energy: number;
 };
 
+export type PetVitalName = keyof PetVitals;
+
 export type Pet = {
   name: string;
   vitals: PetVitals;
@@ -142,6 +144,20 @@ export function clampVital(value: number): number {
 
 export function getVitalsEntries(vitals: PetVitals) {
   return Object.entries(vitals) as Array<[keyof PetVitals, number]>;
+}
+
+export function getLowestVitalName(vitals: PetVitals): PetVitalName {
+  let lowestVitalName: PetVitalName = "hunger";
+  let lowestValue = vitals.hunger;
+
+  for (const [vitalName, value] of getVitalsEntries(vitals)) {
+    if (value < lowestValue) {
+      lowestVitalName = vitalName;
+      lowestValue = value;
+    }
+  }
+
+  return lowestVitalName;
 }
 
 export function getVitalMood(value: number): VitalMood {
@@ -278,20 +294,31 @@ function resolvePetState(
 }
 
 function isSickCondition(vitals: PetVitals): boolean {
-  const vitalValues = Object.values(vitals);
-  const criticallyLowVital = vitalValues.some(
-    (value) => value <= SICK_CRITICAL_THRESHOLD,
-  );
-  const lowVitals =
-    vitalValues.filter((value) => value < SICK_MULTI_LOW_THRESHOLD).length >= 2;
+  const vitalValues = getVitalValues(vitals);
+  const criticallyLowVital = vitalValues.some((value) => {
+    return value <= SICK_CRITICAL_THRESHOLD;
+  });
+  const lowVitals = countVitalsBelow(vitalValues, SICK_MULTI_LOW_THRESHOLD) >= 2;
 
   return criticallyLowVital || lowVitals;
 }
 
 function isRecoveryReady(vitals: PetVitals): boolean {
-  return Object.values(vitals).every((value) => value >= RECOVERY_THRESHOLD);
+  return areAllVitalsAtLeast(vitals, RECOVERY_THRESHOLD);
 }
 
 function isThriving(vitals: PetVitals): boolean {
-  return Object.values(vitals).every((value) => value >= THRIVING_THRESHOLD);
+  return areAllVitalsAtLeast(vitals, THRIVING_THRESHOLD);
+}
+
+function getVitalValues(vitals: PetVitals): number[] {
+  return Object.values(vitals);
+}
+
+function areAllVitalsAtLeast(vitals: PetVitals, threshold: number): boolean {
+  return getVitalValues(vitals).every((value) => value >= threshold);
+}
+
+function countVitalsBelow(vitalValues: number[], threshold: number): number {
+  return vitalValues.filter((value) => value < threshold).length;
 }

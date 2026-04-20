@@ -1,4 +1,5 @@
 import {
+  getLowestVitalName,
   type Pet,
   type PetAction,
   type PetStatus,
@@ -156,6 +157,8 @@ const TAP_NEED_REACTIONS = {
   energy: ["sleepy tbh 💤", "nap button when?", "battery low."],
 } as const;
 
+const LOW_VITAL_THRESHOLD = 35;
+
 export function getPetReaction(pet: Pet, event: PetEvent): string {
   if (event.type === "load") {
     return pickReaction(LOAD_REACTIONS[event.source], pet, 0);
@@ -191,22 +194,21 @@ function getTickReaction(pet: Pet): string {
     pet.vitals.energy,
   );
 
-  if (lowestVital < 35) {
+  if (lowestVital < LOW_VITAL_THRESHOLD) {
     return pickReaction(LOW_VITAL_REACTIONS, pet, 12);
   }
 
-  if (pet.vitals.hunger <= pet.vitals.happiness && pet.vitals.hunger <= pet.vitals.energy) {
+  const lowestVitalName = getLowestVitalName(pet.vitals);
+
+  if (lowestVitalName === "hunger") {
     return pickReaction(HUNGER_REACTIONS, pet, 15);
   }
 
-  if (
-    pet.vitals.happiness <= pet.vitals.hunger &&
-    pet.vitals.happiness <= pet.vitals.energy
-  ) {
+  if (lowestVitalName === "happiness") {
     return pickReaction(HAPPINESS_REACTIONS, pet, 18);
   }
 
-  if (pet.vitals.energy <= pet.vitals.hunger && pet.vitals.energy <= pet.vitals.happiness) {
+  if (lowestVitalName === "energy") {
     return pickReaction(ENERGY_REACTIONS, pet, 21);
   }
 
@@ -254,24 +256,17 @@ function getTapReaction(pet: Pet, count: number): string {
     return pickReaction(TAP_REACTIONS.evolved, pet, 54, count);
   }
 
-  if (
-    pet.vitals.hunger <= pet.vitals.happiness &&
-    pet.vitals.hunger <= pet.vitals.energy
-  ) {
+  const lowestVitalName = getLowestVitalName(pet.vitals);
+
+  if (lowestVitalName === "hunger") {
     return pickReaction(TAP_NEED_REACTIONS.hunger, pet, 57, count);
   }
 
-  if (
-    pet.vitals.happiness <= pet.vitals.hunger &&
-    pet.vitals.happiness <= pet.vitals.energy
-  ) {
+  if (lowestVitalName === "happiness") {
     return pickReaction(TAP_NEED_REACTIONS.happiness, pet, 60, count);
   }
 
-  if (
-    pet.vitals.energy <= pet.vitals.hunger &&
-    pet.vitals.energy <= pet.vitals.happiness
-  ) {
+  if (lowestVitalName === "energy") {
     return pickReaction(TAP_NEED_REACTIONS.energy, pet, 63, count);
   }
 
@@ -279,23 +274,34 @@ function getTapReaction(pet: Pet, count: number): string {
 }
 
 function pickReaction(
-  reactions: string[],
+  reactions: readonly string[],
   pet: Pet,
   seedOffset: number,
   extraSeed = 0,
 ): string {
+  const reactionIndex =
+    getReactionSeed(pet, seedOffset, extraSeed) % reactions.length;
+
+  return reactions[reactionIndex];
+}
+
+function getReactionSeed(
+  pet: Pet,
+  seedOffset: number,
+  extraSeed: number,
+): number {
   const actionWeight =
     pet.actionCounts.feed * 2 + pet.actionCounts.play * 3 + pet.actionCounts.rest;
   const vitalityWeight =
     pet.vitals.hunger + pet.vitals.happiness + pet.vitals.energy;
-  const seed =
+
+  return (
     pet.tickCount +
     pet.recoveryStreak +
     pet.thrivingStreak +
     actionWeight +
     vitalityWeight +
     seedOffset +
-    extraSeed;
-
-  return reactions[seed % reactions.length];
+    extraSeed
+  );
 }
